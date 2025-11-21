@@ -2,97 +2,160 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>终极全能计算器 (含导出功能)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>终极全能计算器 (Ultra Pro)</title>
+    
+    <meta http-equiv="Content-Security-Policy" 
+          content="default-src 'self'; 
+                   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; 
+                   style-src 'self' 'unsafe-inline'; 
+                   connect-src 'self' https://api.exchangerate-api.com; 
+                   img-src 'self' data: https://flagcdn.com; 
+                   object-src 'none'; 
+                   frame-ancestors 'none';">
+
+    <script>if(self!==top){top.location=self.location;}</script>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* --- 核心 UI 样式 --- */
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, "Microsoft YaHei", sans-serif; background-color: #eef2f5; display: flex; justify-content: center; padding-top: 20px; margin: 0; color: #333; }
-        .container { background: white; width: 94%; max-width: 640px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 50px; display: flex; flex-direction: column; }
+        /* --- 🎨 核心 UI 设计 --- */
+        :root { 
+            --primary: #007aff; --primary-dark: #005bb5; 
+            --bg: #f2f6fa; --card: #ffffff; --text: #333;
+            --shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
         
-        /* 头部介绍样式 */
-        .header-section { padding: 25px 20px 15px; background: #f0f7ff; text-align: center; border-bottom: 1px solid #dce0e5; }
-        .header-section h1 { margin: 0 0 5px; font-size: 24px; color: #007BFF; }
-        .header-section p { margin: 0; font-size: 14px; color: #666; }
+        body { 
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; 
+            background-color: var(--bg); 
+            display: flex; justify-content: center; 
+            padding: 12px; margin: 0; color: var(--text); 
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container { 
+            background: var(--card); width: 100%; max-width: 600px; 
+            border-radius: 20px; box-shadow: var(--shadow); 
+            overflow: hidden; display: flex; flex-direction: column; margin-bottom: 40px;
+        }
+        
+        /* 头部 */
+        .header-section { padding: 18px; background: linear-gradient(180deg, #eaf4ff 0%, #fff 100%); text-align: center; border-bottom: 1px solid #eee; }
+        .header-section h1 { margin: 0 0 4px; font-size: 20px; color: #005bb5; font-weight: 800; }
+        .header-section p { margin: 0; font-size: 12px; color: #666; }
 
-        /* 导航 */
-        .tabs { display: flex; background: #fff; border-bottom: 1px solid #eee; overflow-x: auto; }
-        .tab-btn { flex: 1; min-width: 80px; padding: 15px 5px; border: none; background: transparent; cursor: pointer; font-size: 14px; font-weight: 600; color: #666; white-space: nowrap; transition: 0.2s; }
-        .tab-btn:hover { background: #f5faff; color: #007BFF; }
-        .tab-btn.active { color: #007BFF; border-bottom: 3px solid #007BFF; background: #f0f7ff; }
+        /* 🧭 导航栏 (双排宫格) */
+        .nav-grid { 
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; 
+            padding: 12px; background: #fff; border-bottom: 1px solid #eee; 
+        }
+        .nav-btn { 
+            padding: 10px 0; border: 1px solid #f0f0f0; background: #f8f9fa; 
+            border-radius: 10px; font-size: 14px; font-weight: 600; color: #555; 
+            cursor: pointer; transition: all 0.2s; 
+        }
+        .nav-btn.active { 
+            background: #eff6ff; color: var(--primary); border-color: var(--primary); 
+            box-shadow: 0 2px 5px rgba(0,122,255,0.1);
+        }
         
         /* 内容区 */
-        .content { padding: 20px; display: none; animation: fadeIn 0.3s; }
+        .content { padding: 20px 16px; display: none; animation: fadeIn 0.2s ease-out; }
         .content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
         
         /* 表单控件 */
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #555; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #dce0e5; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; background: #fff; }
-        input:focus, select:focus { border-color: #007BFF; box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #444; }
         
+        /* 通用输入框 */
+        input, select { 
+            width: 100%; padding: 12px; border: 1px solid #dce0e5; border-radius: 10px; 
+            font-size: 16px; outline: none; box-sizing: border-box; background: #fff; appearance: none;
+            transition: border 0.2s;
+        }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+        
+        /* 汇率特殊布局：[金额] [国旗] [币种] */
+        .forex-row { display: flex; align-items: center; gap: 8px; }
+        .forex-row input { flex: 1; min-width: 0; font-weight: bold; color: var(--primary); }
+        .forex-flag { width: 28px; height: 20px; border-radius: 3px; object-fit: cover; border: 1px solid #eee; }
+        .forex-select { flex: 0 0 110px; } /* 固定宽度 */
+
+        select { background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007aff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 10px; padding-right: 25px; }
+
         /* 按钮 */
-        button.action-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #007BFF, #0062cc); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: transform 0.1s; }
+        button.action-btn { width: 100%; padding: 13px; background: linear-gradient(135deg, var(--primary), #0062cc); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 12px rgba(0,122,255,0.2); }
         button.action-btn:active { transform: scale(0.98); }
+        button.reset-btn { background: #f0f2f5; color: #666; border: 1px solid #e1e4e8; margin-top: 10px; padding: 10px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 14px; }
+        button.export-btn { width: 100%; padding: 12px; background: #34c759; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         
-        /* 导出按钮 (绿色) */
-        button.export-btn { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        button.export-btn:hover { background: #218838; }
-
-        /* 结果区域 */
-        .result-box { margin-top: 20px; padding: 15px; background: #f7fdf9; border: 1px solid #c3e6cb; border-radius: 10px; display: none; }
-        .result-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
-        .result-item strong { color: #28a745; font-size: 1.1em; }
-
-        /* 提前还款结果样式 */
-        .early-repay-result { margin-top: 15px; padding: 10px; background: #fff8e1; border: 1px solid #ffe0b2; border-radius: 8px; font-weight: 600; color: #e6a23c; display: none; }
-        .early-repay-result span { color: #555; font-weight: normal; }
-
-        /* 对比结果样式 */
-        .comparison-box { background: #e0f7fa; border-color: #b2ebf2; margin-top: 15px; }
-        .comparison-box h4 { color: #0097a7 !important; }
-        .comparison-box .result-item strong { color: #0097a7; }
-
-        /* 图表容器 */
-        .chart-wrapper { position: relative; height: 220px; width: 100%; margin-top: 20px; display: none; justify-content: center; }
+        /* 结果展示 */
+        .result-box { margin-top: 20px; padding: 15px; background: #f7faff; border: 1px solid #dceeff; border-radius: 12px; display: none; }
+        .result-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 15px; border-bottom: 1px dashed #e6e6e6; padding-bottom: 8px; }
+        .result-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .result-item strong { color: #007aff; font-weight: 700; }
         
-        /* 还款计划表样式 */
-        .schedule-container { margin-top: 20px; max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; display: none; }
-        table.schedule-tbl { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
-        table.schedule-tbl th { background: #f1f3f5; padding: 10px; position: sticky; top: 0; z-index: 1; color: #444; }
-        table.schedule-tbl td { padding: 8px; border-bottom: 1px solid #eee; color: #666; }
-        table.schedule-tbl tr:nth-child(even) { background-color: #fafbfc; }
-        
-        /* 反推样式 */
-        .reverse-box { background: #fff9db; border-color: #ffeeba; }
-        .reverse-box .result-item strong { color: #e6a23c; }
+        /* 特殊结果框 */
+        .comparison-box { background: #fffcf0; border-color: #ffeeba; margin-top: 15px; }
+        .comparison-box h4 { color: #b37400 !important; margin: 0 0 10px 0; }
+        .comparison-box .result-item strong { color: #b37400; }
+        .early-repay-result { background: #eaffea; border: 1px solid #c3e6cb; color: #155724; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 14px; display: none; }
 
-        /* 汇率多结果样式 */
-        #forexMultiResult { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #eee; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; }
-        .forex-item { display: flex; justify-content: space-between; }
-        .forex-item strong { color: #007BFF; }
-
-        /* 通用两列布局 */
-        .row-input { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        /* 布局 */
+        .row-input { display: flex; gap: 10px; align-items: center; }
         .row-input input { flex: 2; }
-        .row-input select { flex: 1; }
+        .row-input select { flex: 1; min-width: 0; } 
+        
+        /* 图表 */
+        .chart-wrapper { position: relative; height: 240px; width: 100%; margin-top: 20px; display: none; justify-content: center; }
+
+        /* 表格 */
+        .schedule-container { margin-top: 20px; max-height: 300px; overflow-y: auto; border: 1px solid #e1e4e8; border-radius: 8px; display: none; -webkit-overflow-scrolling: touch; }
+        table.schedule-tbl { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; white-space: nowrap; }
+        table.schedule-tbl th { background: #f8f9fa; padding: 10px; position: sticky; top: 0; z-index: 1; color: #555; border-bottom: 1px solid #ddd; }
+        table.schedule-tbl td { padding: 8px; border-bottom: 1px solid #eee; color: #666; }
+        
+        /* 汇率多币种 */
+        #forexMultiResult { margin-top: 15px; padding-top: 12px; border-top: 1px dashed #ddd; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; color: #555; }
+        .forex-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px solid #eee; }
+        
+        /* 🧮 科学计算器 */
+        .calc-screen {
+            width: 100%; height: 80px; background: #1c1c1e; color: #fff; border-radius: 12px;
+            font-size: 36px; text-align: right; padding: 15px; box-sizing: border-box;
+            margin-bottom: 12px; font-family: monospace; overflow-x: auto; white-space: nowrap;
+            display: flex; align-items: center; justify-content: flex-end;
+        }
+        .calc-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .calc-btn {
+            padding: 14px 0; font-size: 18px; font-weight: 500; border: none; border-radius: 8px;
+            background: #e5e5e5; color: #000; cursor: pointer; transition: all 0.1s;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .calc-btn:active { transform: scale(0.92); filter: brightness(0.9); }
+        .btn-op { background: #ff9f0a; color: white; font-size: 22px; font-weight: 600; }
+        .btn-sci { background: #3a3a3c; color: #fff; font-size: 14px; font-weight: 600; }
+        .btn-eq { background: var(--primary); color: white; grid-column: span 2; font-size: 24px; }
+        .btn-ac { background: #ff453a; color: white; font-weight: 700; }
+        .btn-del { background: #ff453a; color: white; font-size: 16px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-section">
-        <h1>🚀 终极全能计算工具箱</h1>
-        <p>集房贷明细、利率反推、实时汇率与工程单位换算于一体。</p>
+        <h1>🚀 终极全能计算器</h1>
+        <p>安全无广・科学精准・工程助手</p>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('loan')">🏠 房贷明细</button>
-        <button class="tab-btn" onclick="switchTab('reverse')">📉 反推利率</button>
-        <button class="tab-btn" onclick="switchTab('forex')">💱 汇率</button>
-        <button class="tab-btn" onclick="switchTab('unit')">⚖️ 工程换算</button>
+    <div class="nav-grid">
+        <button class="nav-btn active" onclick="switchTab('loan')">房贷计算</button>
+        <button class="nav-btn" onclick="switchTab('reverse')">反推利率</button>
+        <button class="nav-btn" onclick="switchTab('calc')">科学计算</button>
+        <button class="nav-btn" onclick="switchTab('forex')">汇率换算</button>
+        <button class="nav-btn" onclick="switchTab('unit')">工程换算</button>
+        <button class="nav-btn" onclick="switchTab('density')">材质密度</button>
     </div>
 
     <div id="loan" class="content active">
@@ -103,73 +166,63 @@
                 <option value="equal_principal">等额本金 (逐月递减)</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>贷款金额 (万元)</label>
-            <input type="number" id="loanAmount" placeholder="100" value="" min="0">
+        <div class="row-input form-group">
+            <div style="flex:1">
+                <label>贷款金额 (万元)</label>
+                <input type="number" id="loanAmount" placeholder="100" min="0" inputmode="decimal">
+            </div>
+            <div style="flex:1">
+                <label>年利率 (%)</label>
+                <input type="number" id="loanRate" placeholder="3.2" min="0" inputmode="decimal">
+            </div>
         </div>
         <div class="form-group">
-            <label>年利率 (%)</label>
-            <input type="number" id="loanRate" placeholder="3.2" value="" min="0">
-        </div>
-        <div class="form-group">
-            <label>期限 (年)</label>
-            <input type="number" id="loanYears" placeholder="30" value="" min="0">
+            <label>贷款期限 (年)</label>
+            <input type="number" id="loanYears" placeholder="30" min="1" inputmode="numeric">
         </div>
 
-        <h4 style="margin: 20px 0 10px; color:#555; border-left: 4px solid #FFA000; padding-left: 10px;">一次性提前还款 (可选)</h4>
-        <div class="form-group">
-            <label>提前还款期数 (月) / 金额 (万元)</label>
-            <div class="row-input">
-                <input type="number" id="earlyRepayMonth" placeholder="例如 24" min="1">
-                <input type="number" id="earlyRepayAmount" placeholder="例如 10" min="0">
+        <h4 style="margin: 20px 0 10px; font-size:14px; color:#555; border-left: 4px solid #ff9f0a; padding-left: 8px;">提前还款 (可选)</h4>
+        <div class="row-input form-group">
+            <div style="flex:1">
+                <label>第几期还款</label>
+                <input type="number" id="earlyRepayMonth" placeholder="如 24" min="1" inputmode="numeric">
+            </div>
+            <div style="flex:1">
+                <label>还款额 (万)</label>
+                <input type="number" id="earlyRepayAmount" placeholder="如 10" min="0" inputmode="decimal">
             </div>
         </div>
          <div class="form-group">
-            <label>还款后处理方式</label>
+            <label>还款后策略</label>
             <select id="recalculateOption">
-                <option value="reduce_term">缩短还款期限 (月供不变)</option>
-                <option value="reduce_payment">减少每月月供 (期限不变)</option>
+                <option value="reduce_term">缩短期限 (月供不变)</option>
+                <option value="reduce_payment">减少月供 (期限不变)</option>
             </select>
         </div>
-        <button class="action-btn" onclick="calculateLoan()">开始计算 & 生成计划表</button>
+        
+        <button class="action-btn" onclick="calculateLoan()">开始计算</button>
+        <button class="reset-btn" onclick="resetInputs('loan')">重置所有输入</button>
 
         <div id="comparisonResult" class="comparison-box result-box">
-            <h4 style="margin: 0 0 10px; border-left: 4px solid #0097a7; padding-left: 8px;">方式对比 (等额本息 vs 等额本金)</h4>
-            <div class="result-item">
-                <span>总利息差额：</span><strong id="compInterestDiff">0 万元</strong>
-            </div>
-            <div class="result-item">
-                <span>首月还款差额：</span><strong id="compFirstPayDiff">0 元</strong>
-            </div>
+            <h4>💰 方式对比 (本息 vs 本金)</h4>
+            <div class="result-item"><span>总利息差：</span><strong id="compInterestDiff">0 万</strong></div>
+            <div class="result-item"><span>首月差额：</span><strong id="compFirstPayDiff">0 元</strong></div>
         </div>
 
         <div id="loanResult" class="result-box">
-            <div class="result-item"><span>首月还款：</span><strong id="monthlyPayment">0 元</strong></div>
-            <div class="result-item"><span>总利息：</span><strong id="totalInterest">0 万元</strong></div>
-            <div class="result-item"><span>本息合计：</span><strong id="totalPayment">0 万元</strong></div>
+            <div class="result-item"><span>首月月供：</span><strong id="monthlyPayment">0 元</strong></div>
+            <div class="result-item"><span>总支付利息：</span><strong id="totalInterest">0 万</strong></div>
+            <div class="result-item"><span>本息合计：</span><strong id="totalPayment">0 万</strong></div>
 
-            <div id="earlyRepayResult" class="early-repay-result">
-                提前还款效果：<span id="repaySavings"></span>
-            </div>
-            
-            <button class="export-btn" onclick="exportCSV()">📥 导出还款计划 (Excel/CSV)</button>
+            <div id="earlyRepayResult" class="early-repay-result"><span id="repaySavings"></span></div>
+            <button class="export-btn" onclick="exportCSV()">📥 导出计划表</button>
 
-            <div class="chart-wrapper" id="chartBox">
-                <canvas id="loanChart"></canvas>
-            </div>
+            <div class="chart-wrapper" id="chartBox"><canvas id="loanChart"></canvas></div>
 
-            <h4 style="margin: 20px 0 10px; color:#555; border-left: 4px solid #007BFF; padding-left: 10px;">月度还款详情 (下拉查看)</h4>
+            <h4 style="margin: 20px 0 10px; color:#555; border-left: 4px solid #007aff; padding-left: 8px;">月度明细</h4>
             <div class="schedule-container" id="scheduleBox">
                 <table class="schedule-tbl" id="scheduleTable">
-                    <thead>
-                        <tr>
-                            <th>期数</th>
-                            <th>本金</th>
-                            <th>利息</th>
-                            <th>本期合计</th>
-                            <th>剩余本金</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th>期数</th><th>本金</th><th>利息</th><th>月供</th><th>剩余</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -177,438 +230,530 @@
     </div>
 
     <div id="reverse" class="content">
-        <div style="background:#eef; padding:10px; border-radius:6px; font-size:13px; color:#557; margin-bottom:15px;">
-            💡 输入贷款参数和目标结果，反算实际年化利率。
+        <div style="background:#fffbf0; padding:12px; border-radius:8px; font-size:13px; color:#b37400; margin-bottom:15px; border:1px solid #ffeeba;">
+            💡 已知放款额和月供，反算真实年化利率(IRR)。
         </div>
         <div class="form-group">
-            <label>目标反推模式</label>
+            <label>反推模式</label>
             <select id="revMode" onchange="updateRevInputs()">
-                <option value="target_interest">反推：已知总利息</option>
-                <option value="target_monthly_payment">反推：已知每月月供</option>
+                <option value="target_monthly_payment">已知月供 -> 求利率</option>
+                <option value="target_interest">已知总利息 -> 求利率</option>
             </select>
         </div>
         <div class="form-group">
-            <label>方式</label>
+            <label>还款方式</label>
             <select id="revMethod">
                 <option value="equal_payment">等额本息</option>
                 <option value="equal_principal">等额本金</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>本金 (万元)</label>
-            <input type="number" id="revPrincipal" placeholder="例如 100" min="0">
+        <div class="row-input form-group">
+            <div style="flex:1">
+                <label>本金(万)</label>
+                <input type="number" id="revPrincipal" placeholder="100" min="0" inputmode="decimal">
+            </div>
+            <div style="flex:1">
+                <label>期限(年)</label>
+                <input type="number" id="revYears" placeholder="30" min="1" inputmode="numeric">
+            </div>
         </div>
-        <div class="form-group">
-            <label>期限 (年)</label>
-            <input type="number" id="revYears" placeholder="例如 30" min="0">
+        <div class="form-group" id="inputMonthly">
+            <label>月供(元)</label>
+            <input type="number" id="revMonthly" placeholder="如 4500" min="0" inputmode="decimal">
         </div>
-        <div class="form-group" id="inputInterest">
-            <label>总利息 (万元)</label>
-            <input type="number" id="revInterest" placeholder="例如 0.7" min="0">
+        <div class="form-group" id="inputInterest" style="display:none;">
+            <label>总利息(万)</label>
+            <input type="number" id="revInterest" placeholder="如 55.7" min="0" inputmode="decimal">
         </div>
-        <div class="form-group" id="inputMonthly" style="display:none;">
-            <label>每月月供 (元)</label>
-            <input type="number" id="revMonthly" placeholder="例如 4500" min="0">
-        </div>
-        <button class="action-btn" onclick="calculateReverseRate()" style="background: linear-gradient(135deg, #f6d365, #fda085); color:#444;">反向推算</button>
-
+        <button class="action-btn" onclick="calculateReverseRate()">反向推算</button>
+        <button class="reset-btn" onclick="resetInputs('reverse')">重置输入</button>
         <div id="revResult" class="result-box reverse-box">
-            <div class="result-item"><span>推算年利率：</span><strong id="revRateResult">0.00%</strong></div>
-            <div class="result-item"><span>总还款验证：</span><strong id="revTotalPay">0 万元</strong></div>
-            <div class="result-item"><span>推算结果补充：</span><strong id="revOtherResult">--</strong></div>
+            <div class="result-item"><span>真实年化利率：</span><strong id="revRateResult" style="color:#ff3b30; font-size:1.3em;">0.00%</strong></div>
+            <div class="result-item"><span>还款总额：</span><strong id="revTotalPay">0 万</strong></div>
+            <div class="result-item"><span>补充信息：</span><strong id="revOtherResult">--</strong></div>
+        </div>
+    </div>
+
+    <div id="calc" class="content">
+        <div class="calc-screen" id="calcDisplay">0</div>
+        <div class="calc-grid">
+            <button class="calc-btn btn-ac" onclick="calcClear()">AC</button>
+            <button class="calc-btn btn-del" onclick="calcDel()">⌫</button>
+            <button class="calc-btn btn-sci" onclick="calcAppend('(')">(</button>
+            <button class="calc-btn btn-sci" onclick="calcAppend(')')">)</button>
+            <button class="calc-btn btn-op" onclick="calcAppend('/')">÷</button>
+            
+            <button class="calc-btn btn-sci" onclick="calcAppend('sin(')">sin</button>
+            <button class="calc-btn btn-sci" onclick="calcAppend('cos(')">cos</button>
+            <button class="calc-btn btn-sci" onclick="calcAppend('tan(')">tan</button>
+            <button class="calc-btn btn-sci" onclick="calcAppend('log(')">log</button>
+            <button class="calc-btn btn-op" onclick="calcAppend('*')">×</button>
+
+            <button class="calc-btn" onclick="calcAppend('7')">7</button>
+            <button class="calc-btn" onclick="calcAppend('8')">8</button>
+            <button class="calc-btn" onclick="calcAppend('9')">9</button>
+            <button class="calc-btn btn-sci" onclick="calcAppend('ln(')">ln</button>
+            <button class="calc-btn btn-op" onclick="calcAppend('-')">-</button>
+
+            <button class="calc-btn" onclick="calcAppend('4')">4</button>
+            <button class="calc-btn" onclick="calcAppend('5')">5</button>
+            <button class="calc-btn" onclick="calcAppend('6')">6</button>
+            <button class="calc-btn btn-sci" onclick="calcAppend('^')">^</button>
+            <button class="calc-btn btn-op" onclick="calcAppend('+')">+</button>
+
+            <button class="calc-btn" onclick="calcAppend('1')">1</button>
+            <button class="calc-btn" onclick="calcAppend('2')">2</button>
+            <button class="calc-btn" onclick="calcAppend('3')">3</button>
+            <button class="calc-btn btn-sci" onclick="calcAppend('sqrt(')">√</button>
+            <button class="calc-btn btn-sci" onclick="calcAppend('π')">π</button>
+
+            <button class="calc-btn btn-sci" onclick="calcAppend('e')">e</button>
+            <button class="calc-btn" onclick="calcAppend('0')">0</button>
+            <button class="calc-btn" onclick="calcAppend('.')">.</button>
+            <button class="calc-btn btn-eq" onclick="calcResult()">=</button>
         </div>
     </div>
 
     <div id="forex" class="content">
         <div class="form-group">
             <label>持有金额</label>
-            <div class="row-input">
-                <input type="number" id="forexAmount" value="100" oninput="calculateForex()">
-                <select id="fromCurrency" onchange="calculateForex()"></select>
+            <div class="forex-row">
+                <input type="number" id="forexAmount" value="100" oninput="calculateForex()" inputmode="decimal">
+                <img id="fromFlag" class="forex-flag" src="https://flagcdn.com/w40/cn.png">
+                <select id="fromCurrency" class="forex-select" onchange="updateFlags(); calculateForex()"></select>
             </div>
         </div>
-        <div style="text-align:center; color:#ccc;">⬇️</div>
+        <div style="text-align:center; color:#aaa; margin: 5px 0;">⬇️</div>
         <div class="form-group">
-            <label>目标货币 (主结果)</label>
-            <div class="row-input">
-                <input type="text" id="forexResult" readonly style="background:#f4f4f4;">
-                <select id="toCurrency" onchange="calculateForex()"></select>
+            <label>目标货币</label>
+            <div class="forex-row">
+                <input type="text" id="forexResult" readonly style="background:#f9f9f9; color:var(--primary);">
+                <img id="toFlag" class="forex-flag" src="https://flagcdn.com/w40/us.png">
+                <select id="toCurrency" class="forex-select" onchange="updateFlags(); calculateForex()"></select>
             </div>
         </div>
-        <p style="text-align:center; font-size:12px; color:#999;" id="rateStatus">加载中...</p>
-        <button class="action-btn" onclick="fetchRates()" style="background:#28a745;">刷新汇率</button>
+        <p style="text-align:center; font-size:12px; color:#999; margin-top:8px;" id="rateStatus">加载中...</p>
+        <button class="action-btn" onclick="fetchRates()" style="background:#34c759;">刷新汇率</button>
 
-        <h4 style="margin: 20px 0 10px; color:#555; border-left: 4px solid #28a745; padding-left: 10px;">其他主要货币换算</h4>
+        <h4 style="margin: 25px 0 10px; font-size:14px; color:#555; border-left: 4px solid #34c759; padding-left: 8px;">参考汇率 (含人民币)</h4>
         <div id="forexMultiResult"></div>
     </div>
 
     <div id="unit" class="content">
         <div class="form-group">
-            <label>物理量类型</label>
+            <label>选择类型</label>
             <select id="unitType" onchange="updateUnitOptions()">
-                <option value="pressure">🌡️ 压力 (Pressure)</option>
-                <option value="flow">💧 流量 (Flow Rate)</option>
-                <option value="velocity">🚀 流速 (Velocity)</option>
-                <option value="length">📏 长度 (Length)</option>
-                <option value="weight">⚖️ 重量 (Weight)</option>
-                <option value="area">⬛ 面积 (Area)</option>
+                <option value="length">📏 长度 (含里/丈/尺)</option>
+                <option value="area">⬛ 面积 (含亩/顷)</option>
+                <option value="weight">⚖️ 重量 (含斤/两)</option>
                 <option value="volume">🧊 体积 (Volume)</option>
-                <option value="data">💾 数据 (Data) [1024]</option>
-                <option value="time">⏳ 时间 (Time)</option>
-                <option value="energy">🔋 能量/功 (Energy)</option>
+                <option value="pressure">🌡️ 压力 (Pressure)</option>
+                <option value="flow">💧 流量 (Flow)</option>
                 <option value="power">⚡ 功率 (Power)</option> 
-                <option value="temperature">🔥 温度 (Temperature)</option>
-                <option value="force">💪 力 (Force)</option> 
+                <option value="energy">🔋 能量 (Energy)</option>
+                <option value="speed">🚀 速度 (Speed)</option>
+                <option value="time">⏳ 时间 (Time)</option>
+                <option value="data">💾 数据 (1024进制)</option>
+                <option value="temperature">🔥 温度 (Temp)</option>
             </select>
         </div>
-        <div class="row-input">
-            <input type="number" id="inputVal" placeholder="输入" oninput="convertUnit()">
-            <select id="fromUnit" onchange="convertUnit()"></select>
+        <div class="form-group">
+            <label>输入</label>
+            <div class="row-input">
+                <input type="number" id="inputVal" placeholder="输入数值" oninput="convertUnit()" inputmode="decimal">
+                <select id="fromUnit" onchange="convertUnit()"></select>
+            </div>
         </div>
-        <div class="row-input">
-            <input type="text" id="outputVal" readonly placeholder="结果" style="background:#f4f4f4;">
-            <select id="toUnit" onchange="convertUnit()"></select>
+        <div class="form-group">
+            <label>结果</label>
+            <div class="row-input">
+                <input type="text" id="outputVal" readonly style="background:#f9f9f9; font-weight:bold; color:var(--primary);">
+                <select id="toUnit" onchange="convertUnit()"></select>
+            </div>
+        </div>
+    </div>
+    
+    <div id="density" class="content">
+        <div class="form-group">
+            <label>选择材料 (建筑/金属/生活)</label>
+            <select id="materialSelect" onchange="queryDensity()"></select>
+        </div>
+        <button class="action-btn" onclick="queryDensity()" style="background: linear-gradient(135deg, #34c759, #218838);">查询密度</button>
+        <div id="densityResult" class="result-box" style="background:#f4fbf6; border-color:#bceac3;">
+            <div class="result-item"><span>材料名称：</span><strong id="densityName">--</strong></div>
+            <div class="result-item"><span>密度 (kg/m³)：</span><strong id="densityKGM3">--</strong></div>
+            <div class="result-item"><span>密度 (g/cm³)：</span><strong id="densityGCM3">--</strong></div>
+            <div class="result-item" id="densityNoteBox" style="display:none; border:none;"><span style="font-size:12px; color:#666;">* 注: 实际密度受含水率/产地影响</span></div>
         </div>
     </div>
 </div>
 
 <script>
-    /* --- 全局状态与辅助 --- */
-    window.currentScheduleData = []; // 存储还款计划数据用于导出
+    /* --- 全局逻辑 --- */
+    window.currentScheduleData = []; 
 
     function switchTab(name) {
         document.querySelectorAll('.content').forEach(e => e.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
-        const clickedButton = event.currentTarget;
+        document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
+        const btns = document.querySelectorAll('.nav-btn');
+        btns.forEach(btn => {
+            if(btn.getAttribute('onclick').includes(name)) btn.classList.add('active');
+        });
         document.getElementById(name).classList.add('active');
-        clickedButton.classList.add('active');
         if(name === 'forex' && !window.ratesLoaded) fetchRates(); 
     }
 
-    function escapeHTML(str) {
-        if (typeof str !== 'string') return str;
-        return str.replace(/[&<>"']/g, function(match) {
-            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[match];
-        });
+    function resetInputs(id) {
+        document.querySelectorAll(`#${id} input`).forEach(i => i.value = '');
+        document.querySelectorAll(`#${id} .result-box`).forEach(b => b.style.display = 'none');
     }
 
-    /* --- 1. 房贷核心计算与导出 --- */
-    function getLoanMetrics(P, r, n, type) {
-        let totalPay = 0, totalInt = 0, firstPay = 0;
-        if (P <= 0 || n <= 0 || r < 0) return { firstPayment: 0, totalInterest: 0, totalPayment: 0 };
-        if (type === 'equal_payment') {
-            if (r === 0) { totalInt = 0; totalPay = P; firstPay = P / n; } 
-            else { let term = Math.pow(1 + r, n); let monthly = P * r * term / (term - 1); firstPay = monthly; totalPay = monthly * n; totalInt = totalPay - P; }
-        } else {
-            let principalMonth = P / n; firstPay = principalMonth + P * r; totalInt = ((n + 1) * P * r) / 2; totalPay = P + totalInt;
-        }
-        return { firstPayment: firstPay, totalInterest: totalInt, totalPayment: totalPay };
+    /* --- 🧮 科学计算器 (安全逻辑) --- */
+    let calcExpr = "";
+    function calcAppend(val) {
+        if(val === '.' && calcExpr.endsWith('.')) return;
+        if(calcExpr === "Error" || calcExpr === "Infinity") calcExpr = "";
+        calcExpr += val;
+        document.getElementById('calcDisplay').innerText = calcExpr;
     }
-    
+    function calcClear() { calcExpr = ""; document.getElementById('calcDisplay').innerText = "0"; }
+    function calcDel() { calcExpr = calcExpr.slice(0, -1); document.getElementById('calcDisplay').innerText = calcExpr || "0"; }
+    function calcResult() {
+        try {
+            if(calcExpr === "") return;
+            let evalStr = calcExpr
+                .replace(/×/g, '*')
+                .replace(/÷/g, '/')
+                .replace(/\^/g, '**')
+                .replace(/π/g, 'Math.PI')
+                .replace(/e/g, 'Math.E')
+                .replace(/sin\(/g, 'Math.sin(')
+                .replace(/cos\(/g, 'Math.cos(')
+                .replace(/tan\(/g, 'Math.tan(')
+                .replace(/log\(/g, 'Math.log10(')
+                .replace(/ln\(/g, 'Math.log(')
+                .replace(/sqrt\(/g, 'Math.sqrt(');
+
+            if (!/^[0-9.\+\-\*\/\%\(\)\s(Math\.)]+$/.test(evalStr)) throw "Sec";
+
+            let result = new Function('return ' + evalStr)();
+            if(!isFinite(result)) throw "Err";
+            result = parseFloat(result.toPrecision(12));
+            calcExpr = result.toString();
+            document.getElementById('calcDisplay').innerText = calcExpr;
+        } catch(e) {
+            calcExpr = "";
+            document.getElementById('calcDisplay').innerText = "Error";
+        }
+    }
+
+    /* --- 🏠 房贷计算 --- */
     let chartInstance = null;
     function calculateLoan() {
-        // 清除旧数据
         window.currentScheduleData = [];
-
-        let P_orig = parseFloat(document.getElementById('loanAmount').value) * 10000;
-        let R = parseFloat(document.getElementById('loanRate').value) / 100; 
-        let r = R / 12; 
-        let n_orig = parseFloat(document.getElementById('loanYears').value) * 12;
+        let P = parseFloat(document.getElementById('loanAmount').value) * 10000;
+        let R = parseFloat(document.getElementById('loanRate').value) / 100 / 12;
+        let N = parseFloat(document.getElementById('loanYears').value) * 12;
         let type = document.getElementById('repaymentMethod').value;
         
-        // 提前还款
-        let repayMonth = parseInt(document.getElementById('earlyRepayMonth').value) || n_orig + 1;
-        let repayAmount = parseFloat(document.getElementById('earlyRepayAmount').value) * 10000 || 0;
-        let recalculateOption = document.getElementById('recalculateOption').value;
+        if(isNaN(P) || isNaN(R) || isNaN(N) || P<=0 || R<0 || N<=0) { alert("请输入有效的数值"); return; }
 
-        // 校验：防空值、防负数
-        if (isNaN(P_orig) || isNaN(R) || isNaN(n_orig)) { alert("请输入完整的贷款信息"); return; }
-        if (P_orig <= 0 || R < 0 || n_orig <= 0) { alert("贷款金额、利率和期限必须大于0"); return; }
-        if (repayMonth < 1 || repayAmount < 0) { alert("提前还款信息输入有误"); return; }
+        let eMonth = parseInt(document.getElementById('earlyRepayMonth').value);
+        let eAmount = parseFloat(document.getElementById('earlyRepayAmount').value) * 10000;
+        let eType = document.getElementById('recalculateOption').value;
+        let isEarly = (eMonth > 0 && eAmount >= 0 && eMonth < N);
 
-        // 对比逻辑
-        const metricsEP = getLoanMetrics(P_orig, r, n_orig, 'equal_payment');
-        const metricsEO = getLoanMetrics(P_orig, r, n_orig, 'equal_principal');
-        const intDiff = (metricsEP.totalInterest - metricsEO.totalInterest) / 10000;
-        const payDiff = metricsEP.firstPayment - metricsEO.firstPayment;
-
-        document.getElementById('compInterestDiff').innerText = `${Math.abs(intDiff).toFixed(2)} 万元 (${intDiff > 0 ? '本息高于本金' : '本金低于本息'})`;
-        document.getElementById('compFirstPayDiff').innerText = `${Math.abs(payDiff).toFixed(2)} 元 (${payDiff > 0 ? '本息高于本金' : '本金低于本息'})`;
+        let diff = compareLoans(P, R, N);
+        document.getElementById('compInterestDiff').innerText = (diff.int/10000).toFixed(2) + " 万";
+        document.getElementById('compFirstPayDiff').innerText = diff.first.toFixed(2) + " 元";
         document.getElementById('comparisonResult').style.display = 'block';
 
-        let totalPay = 0, totalInt = 0, firstPay = 0;
-        let balance = P_orig;
-        let monthly = metricsEP.firstPayment; 
-        let principalMonth = P_orig / n_orig; 
-        let n = n_orig;
+        let balance = P, totalInt = 0, monthly = 0;
+        let schedule = [], pNew = 0, nNew = N, monthlyNew = 0;
+        let hasEarlyPay = false;
 
-        let originalTotalInterest = (type === 'equal_payment' ? metricsEP.totalInterest : metricsEO.totalInterest);
-        firstPay = (type === 'equal_payment' ? metricsEP.firstPayment : metricsEO.firstPayment);
-
-        let P_new = 0;
-        let n_new = n_orig;
-        let monthly_new = monthly;
-        let earlyRepayApplied = false;
-        
-        // 生成计划表数据
-        for(let i=1; i<=n_orig; i++) {
-            let curPay = 0, interest = 0, principal = 0;
-
-            if (type === 'equal_payment') {
-                if (i <= repayMonth && !earlyRepayApplied) {
-                    interest = balance * r; principal = monthly - interest; curPay = monthly;
-                } else if (earlyRepayApplied) {
-                    if (recalculateOption === 'reduce_payment') { interest = balance * r; principal = monthly_new - interest; curPay = monthly_new; } 
-                    else { if (i > n_new) break; interest = balance * r; principal = monthly_new - interest; curPay = monthly_new; }
-                }
-            } else { 
-                interest = balance * r;
-                if (i <= repayMonth && !earlyRepayApplied) { principal = principalMonth; curPay = principal + interest; } 
-                else if (earlyRepayApplied) { principal = P_new / (n_orig - repayMonth + 1); curPay = principal + interest; }
-            }
-            
-            balance -= principal;
-            totalInt += interest;
-            
-            // 记录普通期数据
-            window.currentScheduleData.push({ i: i, principal: principal.toFixed(2), interest: interest.toFixed(2), monthly: curPay.toFixed(2), balance: (balance<0?0:balance).toFixed(2) });
-
-            if (i === repayMonth && repayAmount > 0 && balance > 0 && !earlyRepayApplied) {
-                balance -= repayAmount;
-                earlyRepayApplied = true; 
-                P_new = balance; 
-                
-                if (type === 'equal_payment') {
-                    if (recalculateOption === 'reduce_payment') {
-                        let n_rem = n_orig - repayMonth; let term_new = Math.pow(1 + r, n_rem); monthly_new = P_new * r * term_new / (term_new - 1); n_new = n_orig; 
-                    } else { 
-                        monthly_new = monthly; let n_rem_float = -Math.log(1 - P_new * r / monthly_new) / Math.log(1 + r); n_new = repayMonth + Math.ceil(n_rem_float); 
-                    }
-                } else { P_new = P_new; n_new = n_orig; }
-
-                // 插入提前还款行
-                window.currentScheduleData.push({ i: i + "(提前还)", principal: repayAmount.toFixed(2), interest: "0.00", monthly: repayAmount.toFixed(2), balance: (balance<0?0:balance).toFixed(2) });
-            }
-            if (balance <= 0) break; 
+        if(type === 'equal_payment') {
+            let k = Math.pow(1+R, N);
+            monthly = P * R * k / (k-1);
         }
 
-        totalPay = P_orig + totalInt;
+        for(let i=1; i<=N; i++) {
+            let int = balance * R;
+            let prin = 0, curPay = 0;
+
+            if(type === 'equal_payment') {
+                if(!hasEarlyPay) { prin = monthly - int; curPay = monthly; } 
+                else {
+                    if(eType === 'reduce_payment') { prin = monthlyNew - int; curPay = monthlyNew; } 
+                    else { if(i > nNew) break; prin = monthlyNew - int; curPay = monthlyNew; }
+                }
+            } else {
+                if(!hasEarlyPay) prin = P / N;
+                else prin = pNew / (N - eMonth); 
+                curPay = prin + int;
+            }
+
+            if(balance - prin < 0.1) { prin = balance; curPay = prin + int; balance = 0; }
+            else { balance -= prin; }
+
+            totalInt += int;
+            schedule.push({i, prin, int, pay: curPay, bal: balance});
+
+            if(isEarly && i === eMonth) {
+                balance -= eAmount; if(balance < 0) balance = 0;
+                hasEarlyPay = true; pNew = balance;
+                schedule.push({i: i+"(提前)", prin: eAmount, int: 0, pay: eAmount, bal: balance});
+
+                if(balance > 0) {
+                    if(type === 'equal_payment') {
+                        if(eType === 'reduce_payment') {
+                            let remMonths = N - eMonth; let k = Math.pow(1+R, remMonths);
+                            monthlyNew = balance * R * k / (k-1);
+                        } else {
+                            monthlyNew = monthly;
+                            let temp = 1 - (balance * R / monthly);
+                            if(temp <= 0) { nNew = i; balance = 0; }
+                            else { let remN = -Math.log(temp) / Math.log(1+R); nNew = i + Math.ceil(remN); }
+                        }
+                    }
+                } else break;
+            }
+            if(balance <= 0) break;
+        }
         
-        // 显示结果
-        if (earlyRepayApplied) {
-            let interestSaved = (originalTotalInterest - totalInt) / 10000;
-            let savingsText = `节省利息: <strong>${interestSaved.toFixed(2)} 万元</strong>`;
-            if (recalculateOption === 'reduce_term' && type === 'equal_payment') savingsText += `，期限缩短: <strong>${n_orig - n_new} 个月</strong>`;
-            if (recalculateOption === 'reduce_payment' || type === 'equal_principal') savingsText += `，新月供/本金减少`;
-            document.getElementById('repaySavings').innerHTML = savingsText;
+        window.currentScheduleData = schedule;
+        let firstPay = schedule[0] ? schedule[0].pay : 0;
+        let totalPay = P + totalInt;
+        
+        document.getElementById('monthlyPayment').innerText = firstPay.toFixed(2) + " 元";
+        document.getElementById('totalInterest').innerText = (totalInt/10000).toFixed(2) + " 万";
+        document.getElementById('totalPayment').innerText = (totalPay/10000).toFixed(2) + " 万";
+
+        if(hasEarlyPay) {
+            let orgInt = 0;
+            if(type === 'equal_payment') orgInt = (monthly * N) - P;
+            else orgInt = (N+1)*P*R/2;
+            let save = (orgInt - totalInt)/10000;
+            document.getElementById('repaySavings').innerText = `⚡️ 节省约 ${save.toFixed(2)} 万元利息`;
             document.getElementById('earlyRepayResult').style.display = 'block';
         } else {
             document.getElementById('earlyRepayResult').style.display = 'none';
         }
 
-        document.getElementById('monthlyPayment').innerText = firstPay.toFixed(2) + " 元";
-        document.getElementById('totalInterest').innerText = (totalInt/10000).toFixed(2) + " 万";
-        document.getElementById('totalPayment').innerText = (totalPay/10000).toFixed(2) + " 万";
-        
-        // 渲染表格 HTML
-        let scheduleHtml = window.currentScheduleData.map(d => `<tr><td>${d.i}</td><td>${d.principal}</td><td>${d.interest}</td><td>${d.monthly}</td><td>${d.balance}</td></tr>`).join('');
-        document.querySelector('#scheduleTable tbody').innerHTML = scheduleHtml; 
-        
+        let html = schedule.map(r => `<tr><td>${r.i}</td><td>${r.prin.toFixed(2)}</td><td>${r.int.toFixed(2)}</td><td>${r.pay.toFixed(2)}</td><td>${r.bal.toFixed(2)}</td></tr>`).join('');
+        document.querySelector('#scheduleTable tbody').innerHTML = html;
+
         document.getElementById('loanResult').style.display = 'block';
         document.getElementById('scheduleBox').style.display = 'block';
         document.getElementById('chartBox').style.display = 'flex';
-
-        if (chartInstance) chartInstance.destroy();
+        
+        if(chartInstance) { chartInstance.destroy(); }
         chartInstance = new Chart(document.getElementById('loanChart'), {
             type: 'doughnut',
-            data: { labels: ['本金', '总利息'], datasets: [{ data: [P_orig, totalInt], backgroundColor: ['#36A2EB', '#FF6384'] }] },
-            options: { maintainAspectRatio: false }
+            data: { labels: ['本金', '总利息'], datasets: [{ data: [P, totalInt], backgroundColor: ['#007aff', '#ffcc00'] }] },
+            options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
         });
     }
 
-    // 📥 导出 CSV 功能
+    function compareLoans(P, r, n) {
+        let k = Math.pow(1+r, n);
+        let m1 = P*r*k/(k-1);
+        let int1 = m1*n - P;
+        let int2 = (n+1)*P*r/2;
+        let m2 = P/n + P*r;
+        return { int: Math.abs(int1-int2), first: Math.abs(m1-m2) };
+    }
+
     function exportCSV() {
-        if(!window.currentScheduleData || window.currentScheduleData.length === 0) { alert('请先计算后再导出'); return; }
-        
-        // CSV Header, 添加 BOM \uFEFF 防止 Excel 中文乱码
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-        csvContent += "期数,偿还本金(元),偿还利息(元),本期还款总额(元),剩余本金(元)\n";
-        
-        window.currentScheduleData.forEach(row => {
-            csvContent += `${row.i},${row.principal},${row.interest},${row.monthly},${row.balance}\n`;
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "房贷还款计划表.csv");
-        document.body.appendChild(link);
+        if(window.currentScheduleData.length === 0) { alert('请先计算'); return; }
+        let csv = "\uFEFF期数,本金,利息,月供,剩余\n";
+        window.currentScheduleData.forEach(r => csv += `${r.i},${r.prin.toFixed(2)},${r.int.toFixed(2)},${r.pay.toFixed(2)},${r.bal.toFixed(2)}\n`);
+        let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "房贷计划.csv";
         link.click();
-        document.body.removeChild(link);
     }
 
-    /* --- 2. 反推利率 --- */
-    function updateRevInputs() {
-        let mode = document.getElementById('revMode').value;
-        document.getElementById('inputInterest').style.display = (mode === 'target_interest' ? 'block' : 'none');
-        document.getElementById('inputMonthly').style.display = (mode === 'target_monthly_payment' ? 'block' : 'none');
-    }
-    
-    function calculateReverseRate() {
-        let method = document.getElementById('revMethod').value;
-        let mode = document.getElementById('revMode').value;
-        let P = parseFloat(document.getElementById('revPrincipal').value) * 10000;
-        let n = parseFloat(document.getElementById('revYears').value) * 12;
-        
-        if (isNaN(P) || isNaN(n) || P <= 0 || n <= 0) { alert("请输入有效的本金和期限"); return; }
-        
-        let finalRate = 0, targetTotalPay = 0, calculatedMonthly = 0, calculatedInterest = 0;
-
-        if (mode === 'target_interest') {
-            let I = parseFloat(document.getElementById('revInterest').value) * 10000;
-            if (isNaN(I) || I < 0) { alert("请输入有效的总利息"); return; }
-            targetTotalPay = P + I;
-
-            if (method === 'equal_principal') {
-                finalRate = ((2 * I) / ((n + 1) * P)) * 12 * 100;
-                calculatedMonthly = P / n + P * (finalRate/1200); // 首月
-            } else {
-                let min=0, max=1, guess=0;
-                for(let i=0; i<100; i++) {
-                    guess = (min+max)/2;
-                    let term = Math.pow(1+guess, n);
-                    let calc = (P * (guess*term)/(term-1)) * n;
-                    if(Math.abs(calc - targetTotalPay) < 1) break;
-                    if(calc > targetTotalPay) max = guess; else min = guess;
-                }
-                finalRate = guess * 12 * 100;
-                calculatedMonthly = targetTotalPay / n; 
-            }
-            calculatedInterest = I;
-            document.getElementById('revOtherResult').innerText = `参考月供: ${calculatedMonthly.toFixed(2)} 元`;
-
-        } else {
-            let A = parseFloat(document.getElementById('revMonthly').value);
-            if (isNaN(A) || A <= 0) { alert("请输入有效的月供"); return; }
-            targetTotalPay = A * n;
-
-            if (method === 'equal_principal') {
-                let r = (A - P/n) / P; // 首月月供推算
-                finalRate = r * 12 * 100;
-            } else {
-                let min=0, max=1, guess=0;
-                for(let i=0; i<100; i++) {
-                    guess = (min+max)/2;
-                    let term = Math.pow(1+guess, n);
-                    let calcMonthly = P * (guess*term)/(term-1);
-                    if(Math.abs(calcMonthly - A) < 0.01) break; 
-                    if(calcMonthly > A) max = guess; else min = guess;
-                }
-                finalRate = guess * 12 * 100;
-            }
-            calculatedInterest = targetTotalPay - P;
-            document.getElementById('revOtherResult').innerText = `总利息: ${(calculatedInterest/10000).toFixed(2)} 万元`;
-        }
-
-        document.getElementById('revRateResult').innerText = finalRate.toFixed(3) + " %";
-        document.getElementById('revTotalPay').innerText = (targetTotalPay/10000).toFixed(2) + " 万";
-        document.getElementById('revResult').style.display = 'block';
-    }
-
-    /* --- 3. 汇率 --- */
-    const api = 'https://api.exchangerate-api.com/v4/latest/CNY';
-    const cList = ['CNY','USD','EUR','HKD','JPY','GBP','AUD','CAD','SGD','KRW','THB','TWD','RUB','MYR','INR','CHF','SEK','NZD'];
-    const cName = {'CNY':'🇨🇳 人民币','USD':'🇺🇸 美元','EUR':'🇪🇺 欧元','HKD':'🇭🇰 港币','JPY':'🇯🇵 日元','GBP':'🇬🇧 英镑','AUD':'🇦🇺 澳元','CAD':'🇨🇦 加元','SGD':'🇸🇬 新币','KRW':'🇰🇷 韩元','THB':'🇹🇭 泰铢','TWD':'🇹🇼 台币','RUB':'🇷🇺 卢布','MYR':'🇲🇾 马币','INR':'🇮🇳 卢比','CHF':'🇨🇭 瑞郎','SEK':'🇸🇪 瑞典克朗','NZD':'🇳🇿 新西兰元'};
-    const multiCurrencies = ['USD','EUR','JPY','GBP','HKD','KRW']; 
+    /* --- 💱 汇率 (核心修复: 国旗 + CNY 强制显示) --- */
+    const cNameMap = { 'CNY':'人民币','USD':'美元','EUR':'欧元','HKD':'港币','JPY':'日元', 'GBP':'英镑','AUD':'澳元','CAD':'加元','SGD':'新币','KRW':'韩元', 'THB':'泰铢','TWD':'台币','RUB':'卢布','MYR':'马币','INR':'卢比', 'CHF':'瑞郎','NZD':'新西兰元' };
+    const countryCodes = { 'CNY':'cn','USD':'us','EUR':'eu','HKD':'hk','JPY':'jp','GBP':'gb','AUD':'au', 'CAD':'ca','SGD':'sg','KRW':'kr','THB':'th','TWD':'tw','RUB':'ru','MYR':'my', 'INR':'in','CHF':'ch','NZD':'nz' };
     let rates = {};
 
     async function fetchRates() {
-        document.getElementById('rateStatus').innerText = "正在更新...";
         try {
-            let res = await fetch(api);
+            let res = await fetch('https://api.exchangerate-api.com/v4/latest/CNY');
             let data = await res.json();
             rates = data.rates;
             window.ratesLoaded = true;
-            let ops = cList.map(c => `<option value="${c}">${cName[c]||c} (${c})</option>`).join('');
-            let s1 = document.getElementById('fromCurrency');
-            let s2 = document.getElementById('toCurrency');
-            if(s1.options.length===0) { s1.innerHTML = ops; s2.innerHTML = ops; s1.value='CNY'; s2.value='USD'; }
-            document.getElementById('rateStatus').innerText = "更新时间: " + escapeHTML(data.date);
+            document.getElementById('rateStatus').innerText = "更新: " + data.date;
+            
+            let html = Object.keys(cNameMap).map(c => `<option value="${c}">${c}</option>`).join('');
+            if(document.getElementById('fromCurrency').innerHTML === "") {
+                document.getElementById('fromCurrency').innerHTML = html;
+                document.getElementById('toCurrency').innerHTML = html;
+                document.getElementById('fromCurrency').value = 'CNY';
+                document.getElementById('toCurrency').value = 'USD';
+                updateFlags();
+            }
             calculateForex();
-        } catch(e) { document.getElementById('rateStatus').innerText = "网络错误"; }
+        } catch(e) { document.getElementById('rateStatus').innerText = "汇率加载失败"; }
     }
+
+    function updateFlags() {
+        let f = document.getElementById('fromCurrency').value;
+        let t = document.getElementById('toCurrency').value;
+        document.getElementById('fromFlag').src = `https://flagcdn.com/w40/${countryCodes[f]}.png`;
+        document.getElementById('toFlag').src = `https://flagcdn.com/w40/${countryCodes[t]}.png`;
+    }
+
     function calculateForex() {
         if(!window.ratesLoaded) return;
-        let amount = parseFloat(document.getElementById('forexAmount').value);
-        if (isNaN(amount)) { document.getElementById('forexResult').value = ''; document.getElementById('forexMultiResult').innerHTML = ''; return; }
-        
-        let from = document.getElementById('fromCurrency').value;
-        let to = document.getElementById('toCurrency').value;
-        let res = (amount / rates[from]) * rates[to];
-        document.getElementById('forexResult').value = res.toFixed(4);
+        let amt = parseFloat(document.getElementById('forexAmount').value);
+        if(isNaN(amt)) return;
+        let f = document.getElementById('fromCurrency').value;
+        let t = document.getElementById('toCurrency').value;
+        let val = (amt / rates[f]) * rates[t];
+        document.getElementById('forexResult').value = val.toFixed(4) + " " + t;
 
-        let multiHtml = '';
-        multiCurrencies.forEach(targetCur => {
-            if (targetCur !== from && targetCur !== to) {
-                let multiRes = (amount / rates[from]) * rates[targetCur];
-                multiHtml += `<div class="forex-item"><span>${cName[targetCur]} (${targetCur}):</span><strong>${multiRes.toFixed(4)}</strong></div>`;
-            }
-        });
-        document.getElementById('forexMultiResult').innerHTML = multiHtml;
+        // 智能列表：如果非 RMB 兑换，强制显示 RMB
+        let others = ['USD','EUR','JPY','HKD','GBP','CNY'].filter(c => c!==f && c!==t);
+        // 去重
+        others = [...new Set(others)];
+        
+        let html = others.map(c => {
+            let v = (amt / rates[f]) * rates[c];
+            return `<div class="forex-item"><span><img src="https://flagcdn.com/w20/${countryCodes[c]}.png" style="vertical-align:middle;margin-right:5px;width:16px;">${cNameMap[c]}</span><strong>${v.toFixed(4)}</strong></div>`
+        }).join('');
+        document.getElementById('forexMultiResult').innerHTML = html;
     }
 
-    /* --- 4. 万能单位 (修复数据单位为1024进制) --- */
+    /* --- ⚖️ 万能单位 --- */
     const uData = {
-        // 修复：数据单位严格遵循 1024 进位
-        data: { 
-            r: {'b': 1/1073741824, 'kb': 1/1048576, 'mb': 1/1024, 'gb': 1, 'tb': 1024, 'pb': 1048576}, 
-            n: {'b':'字节 (Byte)', 'kb':'KB', 'mb':'MB', 'gb':'GB', 'tb':'TB', 'pb':'PB'}, 
-            base: 'gb' 
-        },
-        energy: { r: {'j':1, 'kj':1000, 'kwh':3600000, 'cal':4.184, 'kcal':4184, 'btu':1055.06}, n: {'j':'焦耳 (J)','kj':'千焦 (kJ)','kwh':'千瓦时 (kWh)','cal':'卡路里 (cal)','kcal':'千卡 (kcal)','btu':'英热单位 (BTU)'}, base: 'j' },
-        time: { r: {'sec':1, 'min':60, 'hr':3600, 'day':86400, 'week':604800, 'year':31536000}, n: {'sec':'秒 (s)','min':'分钟 (min)','hr':'小时 (h)','day':'天 (day)','week':'周 (week)','year':'年 (year)'}, base: 'sec' },
-        power: { r: {'w':1, 'kw':1000, 'hp':745.7, 'btus':1055.06}, n: {'w':'瓦 (W)','kw':'千瓦 (kW)','hp':'马力','btus':'英热单位/秒'}, base: 'w' },
-        force: { r: {'n':1, 'kgn':9.80665, 'lbf':4.44822}, n: {'n':'牛顿 (N)','kgn':'千克力 (kgf)','lbf':'磅力 (lbf)'}, base: 'n' },
-        temperature: { r: {'c':1, 'f':1, 'k':1}, n: {'c':'摄氏度 (°C)','f':'华氏度 (°F)','k':'开尔文 (K)'}, isSpecial: true },
-        pressure: { r: {'pa':1, 'mpa':1000000, 'bar':100000, 'psi':6894.76, 'atm':101325, 'mmhg':133.322, 'torr':133.322}, n: {'pa':'帕斯卡 (Pa)','mpa':'兆帕 (MPa)','bar':'巴 (Bar)','psi':'磅力/平方英寸','atm':'标准大气压','mmhg':'毫米汞柱','torr':'托 (Torr)'}, base: 'pa' },
-        flow: { r: {'m3s':1, 'm3h':0.000277778, 'lmin':0.000016667, 'gpm':0.00006309, 'cfm':0.000471947}, n: {'m3s':'立方米/秒','m3h':'立方米/小时','lmin':'升/分','gpm':'加仑/分(美)','cfm':'立方英尺/分'}, base: 'm3s' },
-        velocity: { r: {'ms':1, 'kmh':0.277778, 'fts':0.3048, 'knot':0.51444}, n: {'ms':'米/秒','kmh':'千米/小时','fts':'英尺/秒','knot':'节 (海里/时)'}, base: 'ms' },
-        length: { r: {'m':1, 'km':1000, 'cm':0.01, 'mm':0.001, 'inch':0.0254, 'nmi':1852}, n: {'m':'米','km':'千米','cm':'厘米','mm':'毫米','inch':'英寸','nmi':'海里'}, base: 'm' },
-        weight: { r: {'kg':1, 'g':0.001, 't':1000, 'lb':0.453592}, n: {'kg':'千克','g':'克','t':'吨','lb':'磅'}, base: 'kg' },
-        area: { r: {'m2':1, 'ha':10000, 'acre':4046.86}, n: {'m2':'平米','ha':'公顷','acre':'英亩'}, base: 'm2' },
-        volume: { r: {'m3':1, 'l':0.001, 'gal':0.00378541}, n: {'m3':'立方米','l':'升','gal':'加仑'}, base: 'm3' }
+        length: { r: { 'm':1, 'km':1000, 'cm':0.01, 'mm':0.001, 'inch':0.0254, 'ft':0.3048, 'mi':1609.34, 'nmi':1852, 'li':500, 'zhang':3.333333, 'chi':0.333333, 'cun':0.033333 }, n: { 'm':'米', 'km':'千米', 'cm':'厘米', 'mm':'毫米', 'inch':'英寸', 'ft':'英尺', 'mi':'英里', 'nmi':'海里', 'li':'里(市)', 'zhang':'丈', 'chi':'尺', 'cun':'寸' } },
+        area: { r: { 'm2':1, 'km2':1000000, 'ha':10000, 'acre':4046.86, 'sqft':0.092903, 'mu':666.666667, 'fen':66.666667, 'qing':66666.6667 }, n: { 'm2':'平方米', 'km2':'平方千米', 'ha':'公顷', 'acre':'英亩', 'sqft':'平方英尺', 'mu':'亩(市)', 'fen':'分(市)', 'qing':'顷' } },
+        weight: { r: { 'kg':1, 'g':0.001, 'mg':0.000001, 't':1000, 'lb':0.453592, 'oz':0.0283495, 'jin':0.5, 'liang':0.05, 'dan':50 }, n: { 'kg':'千克', 'g':'克', 'mg':'毫克', 't':'吨', 'lb':'磅', 'oz':'盎司', 'jin':'斤(市)', 'liang':'两', 'dan':'担' } },
+        volume: { r: { 'l':1, 'ml':0.001, 'm3':1000, 'gal':3.78541, 'pt':0.473176 }, n: { 'l':'升', 'ml':'毫升', 'm3':'立方米', 'gal':'美制加仑', 'pt':'品脱' } },
+        pressure: { r: { 'pa':1, 'kpa':1000, 'mpa':1000000, 'bar':100000, 'psi':6894.76, 'atm':101325, 'mmhg':133.322 }, n: { 'pa':'帕斯卡', 'kpa':'千帕', 'mpa':'兆帕', 'bar':'巴', 'psi':'PSI', 'atm':'标准大气压', 'mmhg':'毫米汞柱' } },
+        energy: { r: { 'j':1, 'kj':1000, 'cal':4.184, 'kcal':4184, 'kwh':3600000, 'btu':1055.06 }, n: { 'j':'焦耳', 'kj':'千焦', 'cal':'卡路里', 'kcal':'千卡', 'kwh':'千瓦时', 'btu':'英热' } },
+        power: { r: { 'w':1, 'kw':1000, 'hp':745.7 }, n: { 'w':'瓦特', 'kw':'千瓦', 'hp':'马力' } },
+        time: { r: { 's':1, 'min':60, 'h':3600, 'day':86400, 'week':604800, 'yr':31536000 }, n: { 's':'秒', 'min':'分', 'h':'小时', 'day':'天', 'week':'周', 'yr':'年' } },
+        speed: { r: { 'ms':1, 'kmh':0.277778, 'mph':0.44704, 'kn':0.514444, 'mach':340.3 }, n: { 'ms':'米/秒', 'kmh':'千米/时', 'mph':'英里/时', 'kn':'节', 'mach':'马赫' } },
+        data: { r: { 'b':1, 'kb':1024, 'mb':1048576, 'gb':1073741824, 'tb':1099511627776 }, n: { 'b':'Byte', 'kb':'KB', 'mb':'MB', 'gb':'GB', 'tb':'TB' } },
+        flow: { r: {'m3s':1, 'm3h':0.000277778, 'lmin':0.000016667, 'gpm':0.00006309}, n: {'m3s':'立方米/秒','m3h':'立方米/时','lmin':'升/分','gpm':'加仑/分'} },
+        temperature: { isTemp: true, n: {'c':'摄氏度°C', 'f':'华氏度°F', 'k':'开尔文K'} }
     };
 
     function updateUnitOptions() {
-        let t = document.getElementById('unitType').value;
-        let n = uData[t].n;
-        let h = Object.keys(n).map(k => `<option value="${k}">${n[k]}</option>`).join('');
-        document.getElementById('fromUnit').innerHTML = h;
-        document.getElementById('toUnit').innerHTML = h;
-        if(Object.keys(n).length>1) document.getElementById('toUnit').selectedIndex=1;
+        let type = document.getElementById('unitType').value;
+        let data = uData[type];
+        let html = Object.keys(data.n).map(k => `<option value="${k}">${data.n[k]}</option>`).join('');
+        document.getElementById('fromUnit').innerHTML = html;
+        document.getElementById('toUnit').innerHTML = html;
+        if(document.getElementById('toUnit').options.length > 1) document.getElementById('toUnit').selectedIndex = 1;
         convertUnit();
     }
 
-    function convertTemperature(v, from, to) {
-        let K; 
-        switch(from) { case 'c': K = v + 273.15; break; case 'f': K = (v - 32) * 5/9 + 273.15; break; case 'k': K = v; break; default: return v; }
-        switch(to) { case 'c': return K - 273.15; case 'f': return (K - 273.15) * 9/5 + 32; case 'k': return K; default: return K; }
-    }
-
     function convertUnit() {
-        let t = document.getElementById('unitType').value;
-        let v = parseFloat(document.getElementById('inputVal').value);
+        let type = document.getElementById('unitType').value;
+        let val = parseFloat(document.getElementById('inputVal').value);
         let f = document.getElementById('fromUnit').value;
-        let to = document.getElementById('toUnit').value;
-        if(isNaN(v)) { document.getElementById('outputVal').value=''; return; }
-        let res = (t === 'temperature') ? convertTemperature(v, f, to) : (v * uData[t].r[f]) / uData[t].r[to];
-        document.getElementById('outputVal').value = parseFloat(res.toPrecision(7));
+        let t = document.getElementById('toUnit').value;
+        if(isNaN(val)) { document.getElementById('outputVal').value = ""; return; }
+        let res = 0;
+        if(uData[type].isTemp) {
+            let k = 0;
+            if(f==='c') k = val + 273.15; else if(f==='f') k = (val - 32)*5/9 + 273.15; else k = val;
+            if(t==='c') res = k - 273.15; else if(t==='f') res = (k - 273.15)*9/5 + 32; else res = k;
+        } else {
+            let r = uData[type].r;
+            res = val * r[f] / r[t];
+        }
+        if(Math.abs(res) < 0.000001 || Math.abs(res) > 1e9) document.getElementById('outputVal').value = res.toExponential(4);
+        else document.getElementById('outputVal').value = parseFloat(res.toPrecision(7));
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        fetchRates(); updateUnitOptions(); updateRevInputs();
-    });
+    /* --- 🔬 材质密度 --- */
+    const densities = {
+        'select': {n:'--- 请选择 ---', d:0},
+        'cement_loose': {n:'水泥 (散装)', d:1440}, 'sand_dry': {n:'干沙', d:1600}, 'sand_wet': {n:'湿沙', d:1900},
+        'gravel': {n:'碎石', d:1500}, 'concrete': {n:'普通混凝土', d:2400}, 'concrete_steel': {n:'钢筋混凝土', d:2500},
+        'brick': {n:'普通红砖', d:1800}, 'granite': {n:'花岗岩', d:2700}, 'marble': {n:'大理石', d:2600}, 'glass': {n:'玻璃', d:2500},
+        'steel': {n:'钢 (碳钢)', d:7850}, 'stainless': {n:'不锈钢 (304)', d:7930}, 'iron': {n:'纯铁', d:7874}, 'alum': {n:'铝', d:2700},
+        'copper': {n:'铜', d:8960}, 'brass': {n:'黄铜', d:8500}, 'gold': {n:'黄金', d:19320}, 'silver': {n:'银', d:10490},
+        'water': {n:'纯水 (4°C)', d:1000}, 'sea': {n:'海水', d:1025}, 'ice': {n:'冰', d:917}, 'oil_veg': {n:'植物油', d:920},
+        'petrol': {n:'汽油', d:730}, 'diesel': {n:'柴油', d:840}, 'milk': {n:'牛奶', d:1030}, 'alcohol': {n:'乙醇', d:789}, 'air': {n:'空气', d:1.204}
+    };
 
+    function initDensity() {
+        let html = "";
+        for(let k in densities) html += `<option value="${k}">${densities[k].n}</option>`;
+        document.getElementById('materialSelect').innerHTML = html;
+    }
+
+    function queryDensity() {
+        let key = document.getElementById('materialSelect').value;
+        if(key === 'select') { document.getElementById('densityResult').style.display = 'none'; return; }
+        let d = densities[key].d;
+        document.getElementById('densityName').innerText = densities[key].n;
+        document.getElementById('densityKGM3').innerText = d;
+        document.getElementById('densityGCM3').innerText = (d/1000).toFixed(3);
+        document.getElementById('densityResult').style.display = 'block';
+        document.getElementById('densityNoteBox').style.display = 'block';
+    }
+
+    /* --- 📉 反推利率 --- */
+    function calculateReverseRate() {
+        let mode = document.getElementById('revMode').value;
+        let method = document.getElementById('revMethod').value;
+        let P = parseFloat(document.getElementById('revPrincipal').value) * 10000;
+        let n = parseFloat(document.getElementById('revYears').value) * 12;
+        if(isNaN(P) || isNaN(n) || P<=0 || n<=0) { alert("请输入有效数值"); return; }
+        let targetMonthly = 0;
+        let totalPay = 0;
+        if(mode === 'target_monthly_payment') {
+            targetMonthly = parseFloat(document.getElementById('revMonthly').value);
+            if(isNaN(targetMonthly)) return;
+            totalPay = targetMonthly * n;
+        } else {
+            let totalInt = parseFloat(document.getElementById('revInterest').value) * 10000;
+            if(isNaN(totalInt)) return;
+            totalPay = P + totalInt;
+            targetMonthly = totalPay / n; 
+        }
+        let rate = 0;
+        if(method === 'equal_principal') {
+            let intVal = totalPay - P;
+            rate = (2 * intVal) / ((n+1)*P) * 12;
+        } else {
+            let min = 0, max = 1; 
+            for(let i=0; i<50; i++) {
+                let mid = (min+max)/2;
+                let k = Math.pow(1+mid, n);
+                let m = P*mid*k/(k-1);
+                if(mode === 'target_monthly_payment') { if(m > targetMonthly) max = mid; else min = mid; } 
+                else { if(m*n > totalPay) max = mid; else min = mid; }
+            }
+            rate = min * 12;
+        }
+        document.getElementById('revRateResult').innerText = (rate*100).toFixed(3) + "%";
+        document.getElementById('revTotalPay').innerText = (totalPay/10000).toFixed(2) + " 万";
+        let note = mode === 'target_monthly_payment' ? `总利息: ${((totalPay-P)/10000).toFixed(2)}万` : `参考月供: ${targetMonthly.toFixed(0)}元`;
+        document.getElementById('revOtherResult').innerText = note;
+        document.getElementById('revResult').style.display = 'block';
+    }
+    function updateRevInputs() {
+        let mode = document.getElementById('revMode').value;
+        document.getElementById('inputMonthly').style.display = mode === 'target_monthly_payment' ? 'block' : 'none';
+        document.getElementById('inputInterest').style.display = mode === 'target_interest' ? 'block' : 'none';
+    }
+
+    /* --- 初始化 --- */
+    window.onload = function() {
+        updateUnitOptions(); 
+        updateRevInputs();
+        initDensity();
+    };
 </script>
 
 </body>
